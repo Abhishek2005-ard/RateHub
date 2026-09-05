@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   Code2,
-  Sliders,
   Copy,
   Check,
   Star,
-  Sparkles,
-  ShoppingBag,
-  CheckCircle2,
   Settings,
   Eye
 } from 'lucide-react';

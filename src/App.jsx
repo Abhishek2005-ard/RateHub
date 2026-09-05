@@ -13,10 +13,19 @@ import PricingSection from './components/PricingSection';
 import CommandPalette from './components/CommandPalette';
 import Footer from './components/Footer';
 
+// Auth Modals
+import RegisterModal from './components/auth/RegisterModal';
+import LoginModal from './components/auth/LoginModal';
+
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Auth Modals State
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   // Sync dark mode class on document element
   useEffect(() => {
@@ -41,7 +50,7 @@ export default function App() {
 
   const showToast = (message) => {
     setToastMessage(message);
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
   return (
@@ -70,7 +79,10 @@ export default function App() {
       <Navbar
         darkMode={darkMode}
         setDarkMode={setDarkMode}
+        currentUser={currentUser}
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+        onOpenRegister={() => setRegisterOpen(true)}
+        onOpenLogin={() => setLoginOpen(true)}
       />
 
       {/* Hero Section */}
@@ -105,6 +117,34 @@ export default function App() {
       <CommandPalette
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
+      />
+
+      {/* Normal User Registration Modal */}
+      <RegisterModal
+        isOpen={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        onSwitchToLogin={() => {
+          setRegisterOpen(false);
+          setLoginOpen(true);
+        }}
+        onRegisterSuccess={(user) => {
+          setCurrentUser(user);
+          showToast(`Welcome ${user.name}! Your account has been registered.`);
+        }}
+      />
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onSwitchToRegister={() => {
+          setLoginOpen(false);
+          setRegisterOpen(true);
+        }}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          showToast(`Logged in as ${user.name}`);
+        }}
       />
 
     </div>

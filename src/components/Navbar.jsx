@@ -16,7 +16,7 @@ import {
   BookOpen
 } from 'lucide-react';
 
-export default function Navbar({ darkMode, setDarkMode, onOpenCommandPalette }) {
+export default function Navbar({ darkMode, setDarkMode, onOpenCommandPalette, onOpenRegister, onOpenLogin, currentUser }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -112,14 +112,30 @@ export default function Navbar({ darkMode, setDarkMode, onOpenCommandPalette }) 
               {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
             </button>
 
-            {/* Primary Action Button */}
-            <a
-              href="#playground"
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-medium text-xs shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <Terminal className="w-3.5 h-3.5" />
-              Get API Key
-            </a>
+            {/* Auth Buttons: Sign In & Register or Logged in badge */}
+            {currentUser ? (
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-mono">
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>{currentUser.name}</span>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={onOpenLogin}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-300 hover:text-white hover:bg-slate-800 transition-colors border border-slate-800"
+                >
+                  Sign In
+                </button>
+
+                <button
+                  onClick={onOpenRegister}
+                  className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-medium text-xs shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Terminal className="w-3.5 h-3.5" />
+                  Register
+                </button>
+              </>
+            )}
 
             {/* Mobile Hamburger */}
             <button
