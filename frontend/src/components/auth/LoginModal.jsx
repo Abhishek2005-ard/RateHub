@@ -5,7 +5,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  CheckCircle2,
   AlertCircle,
   RefreshCw,
   X,
@@ -13,12 +12,11 @@ import {
   Shield,
   Store,
   User,
-  ShoppingBag,
-  Sparkles
+  ShoppingBag
 } from 'lucide-react';
 
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLoginSuccess }) {
-  const [selectedRole, setSelectedRole] = useState('user'); // 'user', 'store_owner', 'admin'
+  const [selectedRole, setSelectedRole] = useState('user');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -77,10 +75,9 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Invalid email, password, or role selection.');
+        throw new Error(data.message || 'Invalid email or password.');
       }
 
-      // Save JWT Token & User
       if (data.token) localStorage.setItem('ratehub_token', data.token);
       if (data.user) localStorage.setItem('ratehub_user', JSON.stringify(data.user));
 
@@ -89,7 +86,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
       }
     } catch (err) {
       if (err.message.includes('Failed to fetch')) {
-        // Fallback mock user response for zero-config preview
         const mockUser = {
           id: selectedRole === 'admin' ? 1 : selectedRole === 'store_owner' ? 2 : 3,
           name: selectedRole === 'admin' ? 'System Admin' : selectedRole === 'store_owner' ? 'Elena Rostova' : 'Alex Morgan',
@@ -106,9 +102,9 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
   };
 
   const roleConfigs = {
-    user: { title: 'Normal User', icon: User, badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
-    store_owner: { title: 'Store Owner', icon: Store, badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
-    admin: { title: 'Administrator', icon: Shield, badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' },
+    user: { title: 'Normal User', icon: User },
+    store_owner: { title: 'Store Owner', icon: Store },
+    admin: { title: 'Administrator', icon: Shield },
   };
 
   return (
@@ -121,17 +117,17 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
           className="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl max-w-md w-full overflow-hidden relative my-8"
         >
           {/* Header */}
-          <div className="p-6 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border-b border-slate-800 flex items-center justify-between">
+          <div className="p-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
                 <ShoppingBag className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-lg font-extrabold text-white tracking-tight">
-                  Single Multi-Role Sign In
+                  Sign In to RateHub
                 </h3>
                 <p className="text-xs text-slate-400 font-mono">
-                  Admin • Store Owner • Normal User
+                  Select your role to continue
                 </p>
               </div>
             </div>
@@ -144,13 +140,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
             </button>
           </div>
 
-          {/* Body Form */}
+          {/* Form */}
           <div className="p-6 sm:p-8 space-y-5">
-            
-            {/* Role Switcher Tabs */}
+            {/* Role Switcher */}
             <div>
               <label className="text-xs font-mono font-semibold text-slate-300 block mb-2">
-                Select Your Login Account Role:
+                Account Role:
               </label>
               <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono">
                 {[
@@ -178,9 +173,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
               </div>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              
               {errorMsg && (
                 <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-mono flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -223,8 +216,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
                     onChange={handleChange}
                     className="w-full pl-10 pr-10 py-2.5 bg-slate-950 text-xs sm:text-sm text-white placeholder-slate-500 rounded-xl border border-slate-800 focus:border-indigo-500 focus:outline-none transition-colors"
                   />
-                  
-                  {/* Eye Toggle */}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -236,30 +227,30 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
                 </div>
               </div>
 
-              {/* Demo Auto-Fill Shortcuts */}
+              {/* Demo Account Shortcuts */}
               <div className="pt-1">
-                <span className="text-[10px] font-mono text-slate-500 block mb-1">Quick Auto-fill Test Accounts:</span>
+                <span className="text-[10px] font-mono text-slate-500 block mb-1">Demo accounts:</span>
                 <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
                   <button
                     type="button"
                     onClick={() => fillDemoCredentials('user')}
                     className="px-2 py-1 bg-slate-950 hover:bg-slate-800 text-emerald-400 rounded border border-slate-800"
                   >
-                    + Normal User
+                    User
                   </button>
                   <button
                     type="button"
                     onClick={() => fillDemoCredentials('store_owner')}
                     className="px-2 py-1 bg-slate-950 hover:bg-slate-800 text-purple-400 rounded border border-slate-800"
                   >
-                    + Store Owner
+                    Store Owner
                   </button>
                   <button
                     type="button"
                     onClick={() => fillDemoCredentials('admin')}
                     className="px-2 py-1 bg-slate-950 hover:bg-slate-800 text-indigo-400 rounded border border-slate-800"
                   >
-                    + Admin
+                    Admin
                   </button>
                 </div>
               </div>
@@ -274,7 +265,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
                   {isSubmitting ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Authenticating JWT...</span>
+                      <span>Signing In...</span>
                     </>
                   ) : (
                     <>
@@ -288,19 +279,17 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
               {/* Switch to Register */}
               <div className="pt-3 text-center border-t border-slate-800">
                 <p className="text-xs text-slate-400">
-                  Need a Normal User account?{' '}
+                  Don't have an account?{' '}
                   <button
                     type="button"
                     onClick={onSwitchToRegister}
                     className="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2 ml-1"
                   >
-                    Register New Account
+                    Register
                   </button>
                 </p>
               </div>
-
             </form>
-
           </div>
         </motion.div>
       </div>

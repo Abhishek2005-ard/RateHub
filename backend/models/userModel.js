@@ -1,71 +1,93 @@
 import { pool, isPgConnected, inMemoryUsers } from '../config/db.js';
 
 export async function findUserByEmail(email) {
-  const sanitizedEmail = email.toLowerCase().trim();
+  const sanitized = email.toLowerCase().trim();
 
   if (isPgConnected) {
     try {
-      const result = await pool.query('SELECT * FROM users WHERE email = $1', [sanitizedEmail]);
+      const result = await pool.query('SELECT * FROM users WHERE email = $1', [sanitized]);
       return result.rows[0] || null;
-    } catch (error) {
-      console.error('Error querying PostgreSQL findUserByEmail:', error.message);
+    } catch (err) {
+      console.error('findUserByEmail error:', err.message);
     }
   }
-  
-  // Memory store fallback
-  return inMemoryUsers.find(u => u.email.toLowerCase() === sanitizedEmail) || null;
+
+  return inMemoryUsers.find(u => u.email.toLowerCase() === sanitized) || null;
 }
 
 export async function findUserById(id) {
   if (isPgConnected) {
     try {
-      const result = await pool.query('SELECT id, name, email, address, role, created_at FROM users WHERE id = $1', [id]);
+      const result = await pool.query(
+        'SELECT id, name, email, address, role, created_at FROM users WHERE id = $1', [id]
+      );
       return result.rows[0] || null;
-    } catch (error) {
-      console.error('Error querying PostgreSQL findUserById:', error.message);
+    } catch (err) {
+      console.error('findUserById error:', err.message);
     }
   }
 
-  // Memory store fallback
   const user = inMemoryUsers.find(u => u.id === parseInt(id, 10));
   if (!user) return null;
-  const { password_hash: _hash, ...userWithoutPassword } = user;
-  return userWithoutPassword;
+  const { password_hash, ...rest } = user;
+  return rest;
 }
 
 export async function createUser({ name, email, address, passwordHash, role = 'user' }) {
-  const sanitizedEmail = email.toLowerCase().trim();
+  const sanitized = email.toLowerCase().trim();
 
   if (isPgConnected) {
     try {
-      const query = `
-        INSERT INTO users (name, email, address, password_hash, role)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, name, email, address, role, created_at;
-      `;
-      const values = [name.trim(), sanitizedEmail, address.trim(), passwordHash, role];
-      const result = await pool.query(query, values);
+      const result = await pool.query(
+        `INSERT INTO users (name, email, address, password_hash, role)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, name, email, address, role, created_at`,
+        [name.trim(), sanitized, address.trim(), passwordHash, role]
+      );
       return result.rows[0];
-    } catch (error) {
-      console.error('Error inserting user into PostgreSQL:', error.message);
-      throw error;
+    } catch (err) {
+      console.error('createUser error:', err.message);
+      throw err;
     }
   }
 
-  // Memory store fallback
   const newUser = {
     id: inMemoryUsers.length + 1,
     name: name.trim(),
-    email: sanitizedEmail,
+    email: sanitized,
     address: address.trim(),
     password_hash: passwordHash,
     role: role || 'user',
     created_at: new Date().toISOString()
   };
   inMemoryUsers.push(newUser);
-  
-  const { password_hash: _hash, ...userWithoutPassword } = newUser;
-  return userWithoutPassword;
+
+  const { password_hash: _, ...withoutPwd } = newUser;
+  return withoutPwd;
+}
+
+export async function updateUserPassword(userId, newPasswordHash) {
+  const numericId = parseInt(userId, 10);
+
+  if (isPgConnected) {
+    try {
+      await pool.query(
+        'UPDATE users SET password_hash = $1 WHERE id = $2',
+        [newPasswordHash, numericId]
+      );
+      return true;
+    } catch (err) {
+      console.error('updateUserPassword error:', err.message);
+      throw err;
+    }
+  }
+
+  const user = inMemoryUsers.find(u => u.id === numericId);
+  if (user) {
+    user.password_hash = newPasswordHash;
+    return true;
+  }
+  return false;
 }
 
 export async function getAllUsers(options = {}) {
@@ -77,53 +99,40 @@ export async function getAllUsers(options = {}) {
 
   if (isPgConnected) {
     try {
-      let whereConditions = [];
-      let queryValues = [];
-      let valCount = 1;
+      let conditions = [];
+      let values = [];
+      let idx = 1;
 
       if (search) {
-        whereConditions.push(`(LOWER(name) LIKE $${valCount} OR LOWER(email) LIKE $${valCount} OR LOWER(address) LIKE $${valCount})`);
-        queryValues.push(`%${search}%`);
-        valCount++;
+        conditions.push(`(LOWER(name) LIKE $${idx} OR LOWER(email) LIKE $${idx} OR LOWER(address) LIKE $${idx})`);
+        values.push(`%${search}%`);
+        idx++;
       }
 
       if (role !== 'all') {
-        whereConditions.push(`role = $${valCount}`);
-        queryValues.push(role);
-        valCount++;
+        conditions.push(`role = $${idx}`);
+        values.push(role);
+        idx++;
       }
 
-      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+      const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-      // Count query
-      const countQuery = `SELECT COUNT(*)::int FROM users ${whereClause};`;
-      const countResult = await pool.query(countQuery, queryValues);
-      const total = countResult.rows[0].count;
+      const countRes = await pool.query(`SELECT COUNT(*)::int FROM users ${where}`, values);
+      const total = countRes.rows[0].count;
 
-      // Data query
-      const dataQuery = `
-        SELECT id, name, email, address, role, created_at
-        FROM users
-        ${whereClause}
-        ORDER BY id DESC
-        LIMIT $${valCount} OFFSET $${valCount + 1};
-      `;
-      const dataResult = await pool.query(dataQuery, [...queryValues, limit, offset]);
+      const dataRes = await pool.query(
+        `SELECT id, name, email, address, role, created_at FROM users ${where} ORDER BY id DESC LIMIT $${idx} OFFSET $${idx + 1}`,
+        [...values, limit, offset]
+      );
 
-      return {
-        users: dataResult.rows,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit) || 1
-      };
-    } catch (error) {
-      console.error('Error querying PostgreSQL getAllUsers:', error.message);
+      return { users: dataRes.rows, total, page, limit, totalPages: Math.ceil(total / limit) || 1 };
+    } catch (err) {
+      console.error('getAllUsers error:', err.message);
     }
   }
 
-  // Memory store fallback with filtering and pagination
-  let filtered = inMemoryUsers.map(({ password_hash: _hash, ...u }) => u);
+  // memory fallback
+  let filtered = inMemoryUsers.map(({ password_hash, ...u }) => u);
 
   if (search) {
     filtered = filtered.filter(u =>
@@ -138,14 +147,7 @@ export async function getAllUsers(options = {}) {
   }
 
   const total = filtered.length;
-  const paginatedUsers = filtered.slice(offset, offset + limit);
+  const paginated = filtered.slice(offset, offset + limit);
 
-  return {
-    users: paginatedUsers,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit) || 1
-  };
+  return { users: paginated, total, page, limit, totalPages: Math.ceil(total / limit) || 1 };
 }
-

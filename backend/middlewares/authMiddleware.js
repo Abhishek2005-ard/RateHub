@@ -2,16 +2,13 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ratehub_jwt_secret_key_2026';
 
-/**
- * Middleware to verify JWT authentication token
- */
 export function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({
       success: false,
-      message: 'Access denied. Authorization token missing or malformed.'
+      message: 'Authorization token missing or malformed.'
     });
   }
 
@@ -19,36 +16,24 @@ export function verifyToken(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // { id, email, role, iat, exp }
+    req.user = decoded;
     next();
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Invalid or expired authentication token.'
+      message: 'Invalid or expired token.'
     });
   }
 }
 
-/**
- * Middleware for Role-Based Authorization
- * @param  {...string} roles Allowed roles ('admin', 'user', 'store_owner')
- */
 export function authorizeRoles(...roles) {
   return (req, res, next) => {
-    if (!req.user || !req.user.role) {
+    if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: 'Access forbidden. User role undefined.'
+        message: 'You do not have permission to access this resource.'
       });
     }
-
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: `Access forbidden. Role '${req.user.role}' is not authorized for this resource.`
-      });
-    }
-
     next();
   };
 }

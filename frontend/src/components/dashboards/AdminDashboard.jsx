@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserManagement from '../admin/UserManagement';
+import StoreManagement from '../admin/StoreManagement';
 import {
+
   Shield,
   Users,
   Store,
@@ -697,99 +699,11 @@ export default function AdminDashboard({ user, onLogout }) {
         )}
 
 
-        {/* TAB 3: STORES DIRECTORY */}
+        {/* TAB 3: STORES MANAGEMENT DIRECTORY */}
         {activeTab === 'stores' && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-3">
-                  <Store className="w-6 h-6 text-amber-400" />
-                  Store Directory & Ratings
-                </h1>
-                <p className="text-xs text-slate-400 font-mono mt-1">
-                  Verified merchant accounts, store locations, categories, and customer rating scores.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setActiveTab('addStore')}
-                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-mono font-bold flex items-center gap-2 transition-all shadow-lg shadow-purple-600/30 self-start sm:self-auto"
-              >
-                <StoreIcon className="w-4 h-4" />
-                Add New Store
-              </button>
-            </div>
-
-            {/* SEARCH BAR */}
-            <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
-              <div className="relative w-full max-w-md">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search stores by name, email, category, address..."
-                  value={storeSearch}
-                  onChange={(e) => setStoreSearch(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-purple-500 text-xs font-mono rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-slate-500 outline-none transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* STORES DATA TABLE */}
-            <div className="bg-slate-900/90 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-mono text-slate-300">
-                  <thead>
-                    <tr className="bg-slate-950 border-b border-slate-800 text-slate-400 uppercase tracking-wider">
-                      <th className="py-3.5 px-4 font-bold">Store Name</th>
-                      <th className="py-3.5 px-4 font-bold">Category</th>
-                      <th className="py-3.5 px-4 font-bold">Owner Email</th>
-                      <th className="py-3.5 px-4 font-bold">Address</th>
-                      <th className="py-3.5 px-4 font-bold text-right">Rating Score</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {filteredStores.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center text-slate-500 font-mono">
-                          No store branches found matching search criteria.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredStores.map((s) => (
-                        <tr key={s.id} className="hover:bg-slate-800/40 transition-colors">
-                          <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
-                              <Store className="w-4 h-4" />
-                            </div>
-                            {s.name}
-                          </td>
-
-                          <td className="py-3.5 px-4">
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-950 text-indigo-300 border border-slate-800">
-                              {s.category}
-                            </span>
-                          </td>
-
-                          <td className="py-3.5 px-4 text-slate-400">{s.email}</td>
-                          <td className="py-3.5 px-4 text-slate-300 truncate max-w-xs">{s.address}</td>
-                          
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold">
-                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                              <span>{s.rating_avg || '5.0'}</span>
-                              <span className="text-[10px] text-slate-400 font-normal">({s.rating_count || 12})</span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
+          <StoreManagement />
         )}
+
 
         {/* TAB 4: ADD USER FORM */}
         {activeTab === 'addUser' && (

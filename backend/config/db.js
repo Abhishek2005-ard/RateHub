@@ -6,27 +6,28 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// PostgreSQL Connection Pool configuration
+const isCloudPg = (process.env.PGHOST || '').includes('supabase.co') || Boolean(process.env.DATABASE_URL);
+
 export const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
+  host: process.env.PGHOST || 'db.mlsndfgykvbffxosqpit.supabase.co',
   port: parseInt(process.env.PGPORT || '5432', 10),
   user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'postgres',
-  database: process.env.PGDATABASE || 'ratehub_db',
+  password: process.env.PGPASSWORD || 'Abhishekdhatrak%402005',
+  database: process.env.PGDATABASE || 'postgres',
+  ssl: isCloudPg ? { rejectUnauthorized: false } : false
 });
 
 export let isPgConnected = false;
 
-// Fallback in-memory stores for instant zero-config testing if PostgreSQL is offline
+// in-memory fallback array for local fallback mode
 export const inMemoryUsers = [];
 export const inMemoryStores = [];
 export const inMemoryRatings = [];
 
-// Initialize Database Tables & Seed Initial Data
 async function initDb() {
   try {
     const client = await pool.connect();
-    console.log('✅ Connected to PostgreSQL Database');
+    console.log('Successfully connected to Supabase PostgreSQL cloud database!');
     isPgConnected = true;
 
     await client.query(`
@@ -56,28 +57,40 @@ async function initDb() {
       CREATE TABLE IF NOT EXISTS ratings (
         id SERIAL PRIMARY KEY,
         store_id INTEGER REFERENCES stores(id) ON DELETE CASCADE,
-        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         rating INTEGER CHECK (rating >= 1 AND rating <= 5),
         comment TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
+    // Ensure unique constraint exists
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'unique_user_store_rating'
+        ) THEN
+          ALTER TABLE ratings ADD CONSTRAINT unique_user_store_rating UNIQUE (store_id, user_id);
+        END IF;
+      END $$;
+    `);
+
     await client.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_stores_email ON stores(email);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_ratings_store ON ratings(store_id);`);
 
     client.release();
-    console.log('✅ PostgreSQL Schema initialized (users, stores, ratings tables verified)');
+    console.log('Database schema & tables ready on Supabase PostgreSQL');
   } catch (err) {
-    console.warn('⚠️ PostgreSQL connection failed (or DB not running). Using in-memory database fallback for zero-config testing.');
+    console.warn('PostgreSQL connection error, using fallback:', err.message);
     isPgConnected = false;
   }
 
-  // Seed default data for zero-config testing
-  await seedDefaultData();
+  await seedDefaults();
 }
 
-async function seedDefaultData() {
+async function seedDefaults() {
   const salt = await bcrypt.genSalt(10);
   const adminHash = await bcrypt.hash('admin123', salt);
   const ownerHash = await bcrypt.hash('owner123', salt);
@@ -85,8 +98,8 @@ async function seedDefaultData() {
 
   const defaultUsers = [
     { id: 1, name: 'System Admin', email: 'admin@ratehub.dev', address: 'RateHub HQ, Tech Center', password_hash: adminHash, role: 'admin', created_at: new Date('2026-01-15').toISOString() },
-    { id: 2, name: 'Elena Rostova (Store Owner)', email: 'owner@heritage.com', address: 'Pearl District Branch', password_hash: ownerHash, role: 'store_owner', created_at: new Date('2026-02-10').toISOString() },
-    { id: 3, name: 'Alex Morgan (Normal User)', email: 'user@ratehub.dev', address: '742 Evergreen Terrace', password_hash: userHash, role: 'user', created_at: new Date('2026-03-04').toISOString() },
+    { id: 2, name: 'Elena Rostova', email: 'owner@heritage.com', address: 'Pearl District Branch', password_hash: ownerHash, role: 'store_owner', created_at: new Date('2026-02-10').toISOString() },
+    { id: 3, name: 'Alex Morgan', email: 'user@ratehub.dev', address: '742 Evergreen Terrace', password_hash: userHash, role: 'user', created_at: new Date('2026-03-04').toISOString() },
     { id: 4, name: 'Sarah Jenkins', email: 'sarah.j@gmail.com', address: '120 Market St, SF', password_hash: userHash, role: 'user', created_at: new Date('2026-04-12').toISOString() },
     { id: 5, name: 'David Chen', email: 'david.c@techcorp.io', address: '450 Silicon Ave, Palo Alto', password_hash: userHash, role: 'user', created_at: new Date('2026-05-19').toISOString() }
   ];
@@ -100,12 +113,12 @@ async function seedDefaultData() {
   ];
 
   const defaultRatings = [
-    { id: 1, store_id: 1, user_id: 3, rating: 5, comment: 'Best espresso in town! Ultra fast wifi and super helpful staff.', created_at: new Date('2026-03-10').toISOString() },
+    { id: 1, store_id: 1, user_id: 3, rating: 5, comment: 'Best espresso in town, great wifi too.', created_at: new Date('2026-03-10').toISOString() },
     { id: 2, store_id: 1, user_id: 4, rating: 5, comment: 'Loved the oat milk latte.', created_at: new Date('2026-04-15').toISOString() },
-    { id: 3, store_id: 2, user_id: 3, rating: 4, comment: 'Great selection of gadgets, slightly high prices.', created_at: new Date('2026-03-20').toISOString() },
+    { id: 3, store_id: 2, user_id: 3, rating: 4, comment: 'Good selection, prices a bit high.', created_at: new Date('2026-03-20').toISOString() },
     { id: 4, store_id: 3, user_id: 5, rating: 5, comment: 'Stylish clothing collection.', created_at: new Date('2026-05-22').toISOString() },
-    { id: 5, store_id: 4, user_id: 4, rating: 4, comment: 'Fresh organic produce, clean aisles.', created_at: new Date('2026-04-18').toISOString() },
-    { id: 6, store_id: 5, user_id: 5, rating: 5, comment: 'Top tier PCs and high refresh rate monitors!', created_at: new Date('2026-06-01').toISOString() },
+    { id: 5, store_id: 4, user_id: 4, rating: 4, comment: 'Fresh produce, clean aisles.', created_at: new Date('2026-04-18').toISOString() },
+    { id: 6, store_id: 5, user_id: 5, rating: 5, comment: 'Great PCs and monitors!', created_at: new Date('2026-06-01').toISOString() },
     { id: 7, store_id: 1, user_id: 5, rating: 4, comment: 'Cozy atmosphere for reading.', created_at: new Date('2026-06-14').toISOString() }
   ];
 
@@ -113,10 +126,39 @@ async function seedDefaultData() {
     if (inMemoryUsers.length === 0) inMemoryUsers.push(...defaultUsers);
     if (inMemoryStores.length === 0) inMemoryStores.push(...defaultStores);
     if (inMemoryRatings.length === 0) inMemoryRatings.push(...defaultRatings);
+  } else {
+    try {
+      const userCheck = await pool.query('SELECT COUNT(*)::int FROM users');
+      if (userCheck.rows[0].count === 0) {
+        for (const u of defaultUsers) {
+          await pool.query(
+            `INSERT INTO users (name, email, address, password_hash, role)
+             VALUES ($1, $2, $3, $4, $5) ON CONFLICT (email) DO NOTHING`,
+            [u.name, u.email, u.address, u.password_hash, u.role]
+          );
+        }
+        for (const s of defaultStores) {
+          await pool.query(
+            `INSERT INTO stores (name, email, address, category)
+             VALUES ($1, $2, $3, $4)`,
+            [s.name, s.email, s.address, s.category]
+          );
+        }
+        for (const r of defaultRatings) {
+          await pool.query(
+            `INSERT INTO ratings (store_id, user_id, rating, comment)
+             VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+            [r.store_id, r.user_id, r.rating, r.comment]
+          );
+        }
+        console.log('Seeded initial data into Supabase PostgreSQL cloud database');
+      }
+    } catch (e) {
+      console.warn('PostgreSQL seed check skipped:', e.message);
+    }
   }
 }
 
 initDb();
 
 export default pool;
-

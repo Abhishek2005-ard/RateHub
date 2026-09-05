@@ -33,23 +33,22 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
 
   if (!isOpen) return null;
 
-  // Validation functions
   const validateField = (field, value) => {
     let err = '';
     if (field === 'name') {
       if (!value || value.trim().length < 2) {
-        err = 'Full Name must be at least 2 characters.';
+        err = 'Name must be at least 2 characters.';
       }
     } else if (field === 'email') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!value) {
-        err = 'Email address is required.';
+        err = 'Email is required.';
       } else if (!emailRegex.test(value.trim())) {
-        err = 'Please enter a valid email address (e.g. user@domain.com).';
+        err = 'Please enter a valid email address.';
       }
     } else if (field === 'address') {
       if (!value || value.trim().length < 5) {
-        err = 'Street address must be at least 5 characters.';
+        err = 'Address must be at least 5 characters.';
       }
     } else if (field === 'password') {
       if (!value) {
@@ -89,7 +88,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
     setErrors((prev) => ({ ...prev, [name]: fieldErr }));
   };
 
-  // Password strength meter computation
   const getPasswordStrength = (pwd) => {
     if (!pwd) return { score: 0, label: '', color: 'bg-slate-700' };
     let score = 0;
@@ -116,13 +114,12 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
     setServerError(null);
 
     try {
-      // Connect to Express backend API
       const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, role: 'user' }),
       });
 
       const data = await response.json();
@@ -131,21 +128,17 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
         if (data.errors) {
           setErrors(data.errors);
         }
-        throw new Error(data.message || 'Registration failed. Please try again.');
+        throw new Error(data.message || 'Registration failed.');
       }
 
-      // Success
       setSuccessData(data.user);
       if (onRegisterSuccess) {
         onRegisterSuccess(data.user);
       }
     } catch (err) {
-      console.warn('API Error (falling back to mock response if backend offline):', err.message);
-      
-      // Fallback mock success if server isn't started yet
       if (err.message.includes('Failed to fetch')) {
         const mockUser = {
-          id: 1,
+          id: Date.now(),
           name: formData.name,
           email: formData.email,
           address: formData.address,
@@ -170,18 +163,18 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           className="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl max-w-lg w-full overflow-hidden relative my-8"
         >
-          {/* Header */}
-          <div className="p-6 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border-b border-slate-800 flex items-center justify-between">
+          {/* Modal Header */}
+          <div className="p-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
                 <ShoppingBag className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-lg font-extrabold text-white tracking-tight">
-                  Create Normal User Account
+                  Create User Account
                 </h3>
                 <p className="text-xs text-slate-400 font-mono">
-                  RateHub Verified Community Index
+                  Join RateHub to rate local stores
                 </p>
               </div>
             </div>
@@ -194,10 +187,8 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
             </button>
           </div>
 
-          {/* Body Content */}
+          {/* Modal Body */}
           <div className="p-6 sm:p-8">
-            
-            {/* SUCCESS STATE CARD */}
             {successData ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -209,26 +200,26 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                 </div>
 
                 <h4 className="text-xl font-extrabold text-white">
-                  Registration Successful!
+                  Registration Successful
                 </h4>
-                
+
                 <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
-                  Welcome to RateHub, <strong className="text-white">{successData.name}</strong>! Your account has been encrypted and stored securely.
+                  Welcome, <strong className="text-white">{successData.name}</strong>! Your account has been created.
                 </p>
 
                 <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-left font-mono text-xs space-y-1.5 text-slate-300">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Registered Email:</span>
+                    <span className="text-slate-500">Email:</span>
                     <span className="text-indigo-400 font-bold">{successData.email}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Shipping Address:</span>
+                    <span className="text-slate-500">Address:</span>
                     <span className="text-slate-200 truncate max-w-[200px]">{successData.address}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Password Security:</span>
+                    <span className="text-slate-500">Security:</span>
                     <span className="text-emerald-400 flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" /> Bcrypt Hash Saved
+                      <ShieldCheck className="w-3.5 h-3.5" /> Password Hashed
                     </span>
                   </div>
                 </div>
@@ -247,9 +238,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                 </div>
               </motion.div>
             ) : (
-              /* REGISTRATION FORM */
               <form onSubmit={handleSubmit} className="space-y-4">
-
                 {serverError && (
                   <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-mono flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -257,7 +246,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                   </div>
                 )}
 
-                {/* 1. Full Name */}
+                {/* Name */}
                 <div>
                   <label className="text-xs font-mono font-semibold text-slate-300 block mb-1.5">
                     Full Name <span className="text-rose-400">*</span>
@@ -287,7 +276,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                   )}
                 </div>
 
-                {/* 2. Email Address */}
+                {/* Email */}
                 <div>
                   <label className="text-xs font-mono font-semibold text-slate-300 block mb-1.5">
                     Email Address <span className="text-rose-400">*</span>
@@ -317,21 +306,21 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                   )}
                 </div>
 
-                {/* 3. Address Field */}
+                {/* Address */}
                 <div>
                   <label className="text-xs font-mono font-semibold text-slate-300 block mb-1.5">
-                    Physical Address <span className="text-rose-400">*</span>
+                    Address <span className="text-rose-400">*</span>
                   </label>
                   <div className="relative">
-                    <MapPin className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
-                    <textarea
+                    <MapPin className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
                       name="address"
-                      rows="2"
-                      placeholder="Street, City, Zip / Postal Code"
+                      placeholder="e.g. 742 Evergreen Terrace"
                       value={formData.address}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      className={`w-full pl-10 pr-4 py-2.5 bg-slate-950 text-xs sm:text-sm text-white placeholder-slate-500 rounded-xl border transition-colors focus:outline-none resize-none ${
+                      className={`w-full pl-10 pr-4 py-2.5 bg-slate-950 text-xs sm:text-sm text-white placeholder-slate-500 rounded-xl border transition-colors focus:outline-none ${
                         touched.address && errors.address
                           ? 'border-rose-500 focus:border-rose-500'
                           : touched.address && !errors.address
@@ -347,7 +336,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                   )}
                 </div>
 
-                {/* 4. Password Field with Visibility Toggle */}
+                {/* Password */}
                 <div>
                   <label className="text-xs font-mono font-semibold text-slate-300 block mb-1.5">
                     Password <span className="text-rose-400">*</span>
@@ -357,7 +346,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                     <input
                       type={showPassword ? 'text' : 'password'}
                       name="password"
-                      placeholder="Minimum 8 characters"
+                      placeholder="At least 8 characters"
                       value={formData.password}
                       onChange={handleChange}
                       onBlur={handleBlur}
@@ -369,30 +358,26 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                           : 'border-slate-800 focus:border-indigo-500'
                       }`}
                     />
-                    
-                    {/* Visibility Eye Toggle */}
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1"
-                      aria-label="Toggle password visibility"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4 text-indigo-400" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
 
-                  {/* Strength Bar */}
                   {formData.password && (
                     <div className="mt-2 space-y-1">
-                      <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <div className="flex items-center justify-between text-[11px] font-mono">
+                        <span className="text-slate-400">Password strength:</span>
+                        <span className={pwdStrength.text}>{pwdStrength.label}</span>
+                      </div>
+                      <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className={`h-full ${pwdStrength.color} transition-all duration-300`}
                           style={{ width: `${pwdStrength.score}%` }}
                         />
-                      </div>
-                      <div className="flex justify-between items-center text-[10px] font-mono">
-                        <span className="text-slate-400">Password Strength:</span>
-                        <span className={`font-bold ${pwdStrength.text}`}>{pwdStrength.label}</span>
                       </div>
                     </div>
                   )}
@@ -404,46 +389,41 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                   )}
                 </div>
 
-                {/* Submit Button & Loading State */}
-                <div className="pt-3">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-mono font-bold text-xs shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Encrypting & Registering...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Complete Registration</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </div>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full mt-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-mono font-bold text-xs shadow-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      Register Account
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
 
-                {/* Footer Switch to Login */}
-                <div className="pt-3 text-center border-t border-slate-800">
-                  <p className="text-xs text-slate-400">
-                    Already registered?{' '}
+                {/* Switch to Login */}
+                <div className="text-center pt-2">
+                  <p className="text-xs text-slate-400 font-mono">
+                    Already have an account?{' '}
                     <button
                       type="button"
                       onClick={onSwitchToLogin}
-                      className="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2 ml-1"
+                      className="text-indigo-400 hover:underline font-bold"
                     >
-                      Log In to your Account
+                      Sign In
                     </button>
                   </p>
                 </div>
-
               </form>
             )}
-
           </div>
-
         </motion.div>
       </div>
     </AnimatePresence>

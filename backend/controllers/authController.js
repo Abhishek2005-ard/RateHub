@@ -5,26 +5,20 @@ import { findUserByEmail, createUser, findUserById, getAllUsers } from '../model
 const JWT_SECRET = process.env.JWT_SECRET || 'ratehub_jwt_secret_key_2026';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * Controller: Register User
- */
 export async function register(req, res) {
   try {
     const { name, email, address, password, role } = req.body;
     const errors = {};
 
     if (!name || name.trim().length < 2) {
-      errors.name = 'Full Name must be at least 2 characters.';
+      errors.name = 'Name must be at least 2 characters.';
     }
-
     if (!email || !EMAIL_REGEX.test(email.trim())) {
       errors.email = 'Please enter a valid email address.';
     }
-
     if (!address || address.trim().length < 5) {
       errors.address = 'Address must be at least 5 characters.';
     }
-
     if (!password || password.length < 8) {
       errors.password = 'Password must be at least 8 characters.';
     }
@@ -32,18 +26,14 @@ export async function register(req, res) {
     const assignedRole = ['admin', 'store_owner', 'user'].includes(role) ? role : 'user';
 
     if (Object.keys(errors).length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors
-      });
+      return res.status(400).json({ success: false, message: 'Validation failed', errors });
     }
 
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: 'An account with this email address already exists.',
+        message: 'An account with this email already exists.',
         errors: { email: 'Email is already registered.' }
       });
     }
@@ -51,22 +41,13 @@ export async function register(req, res) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const newUser = await createUser({
-      name,
-      email,
-      address,
-      passwordHash,
-      role: assignedRole
-    });
+    const newUser = await createUser({ name, email, address, passwordHash, role: assignedRole });
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, role: newUser.role, name: newUser.name },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
-
-    console.log(`[MVC AUTH] Registered ${newUser.role.toUpperCase()}: ${newUser.email}`);
 
     return res.status(201).json({
       success: true,
@@ -81,67 +62,47 @@ export async function register(req, res) {
         createdAt: newUser.created_at || newUser.createdAt
       }
     });
-
   } catch (error) {
-    console.error('[MVC AUTH] Error in register controller:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error during registration.'
-    });
+    console.error('Register error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
   }
 }
 
-/**
- * Controller: Single Unified Login for Admin, Normal User & Store Owner
- */
 export async function login(req, res) {
   try {
     const { email, password, role: requestedRole } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email address and password are required.'
-      });
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
     const user = await findUserByEmail(email);
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password.'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
-    // Verify bcrypt password hash
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password.'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
-    // If a specific role was requested in login tab, verify role alignment
+    // check that user's actual role matches the role they picked on the login form
     if (requestedRole && requestedRole !== user.role) {
       return res.status(403).json({
         success: false,
-        message: `Account '${user.email}' is registered as '${user.role}', not '${requestedRole}'. Please select the correct login role.`
+        message: `This account is registered as '${user.role}', not '${requestedRole}'.`
       });
     }
 
-    // Generate JWT token containing id, email, and role
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, name: user.name },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    console.log(`[MVC AUTH] Logged in ${user.role.toUpperCase()}: ${user.email}`);
-
     return res.status(200).json({
       success: true,
-      message: `Login successful! Welcome ${user.name}.`,
+      message: `Welcome back, ${user.name}!`,
       token,
       user: {
         id: user.id,
@@ -152,39 +113,29 @@ export async function login(req, res) {
         createdAt: user.created_at
       }
     });
-
   } catch (error) {
-    console.error('[MVC AUTH] Error in login controller:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error during login.'
-    });
+    console.error('Login error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
   }
 }
 
-/**
- * Controller: Get Current User Profile (Protected)
- */
 export async function getProfile(req, res) {
   try {
     const user = await findUserById(req.user.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User profile not found.' });
+      return res.status(404).json({ success: false, message: 'User not found.' });
     }
     return res.json({ success: true, user });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error retrieving profile.' });
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 }
 
-/**
- * Controller: Get All Users (Admin Only)
- */
 export async function getUsersAdmin(req, res) {
   try {
     const users = await getAllUsers();
     return res.json({ success: true, count: users.length, users });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error retrieving user list.' });
+    return res.status(500).json({ success: false, message: 'Server error.' });
   }
 }
