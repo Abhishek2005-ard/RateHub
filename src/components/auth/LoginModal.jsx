@@ -10,10 +10,15 @@ import {
   RefreshCw,
   X,
   ArrowRight,
-  ShoppingBag
+  Shield,
+  Store,
+  User,
+  ShoppingBag,
+  Sparkles
 } from 'lucide-react';
 
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLoginSuccess }) {
+  const [selectedRole, setSelectedRole] = useState('user'); // 'user', 'store_owner', 'admin'
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,13 +27,29 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
 
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setErrorMsg(null);
+  };
+
+  const handleRoleSelect = (roleKey) => {
+    setSelectedRole(roleKey);
+    setErrorMsg(null);
+  };
+
+  const fillDemoCredentials = (roleKey) => {
+    setSelectedRole(roleKey);
+    setErrorMsg(null);
+    if (roleKey === 'admin') {
+      setFormData({ email: 'admin@ratehub.dev', password: 'admin123' });
+    } else if (roleKey === 'store_owner') {
+      setFormData({ email: 'owner@heritage.com', password: 'owner123' });
+    } else {
+      setFormData({ email: 'user@ratehub.dev', password: 'user123' });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -46,29 +67,35 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          role: selectedRole
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Invalid email or password.');
+        throw new Error(data.message || 'Invalid email, password, or role selection.');
       }
 
-      setUserProfile(data.user);
+      // Save JWT Token & User
+      if (data.token) localStorage.setItem('ratehub_token', data.token);
+      if (data.user) localStorage.setItem('ratehub_user', JSON.stringify(data.user));
+
       if (onLoginSuccess) {
         onLoginSuccess(data.user);
       }
     } catch (err) {
       if (err.message.includes('Failed to fetch')) {
-        // Mock fallback if server isn't running
+        // Fallback mock user response for zero-config preview
         const mockUser = {
-          id: 1,
-          name: formData.email.split('@')[0],
+          id: selectedRole === 'admin' ? 1 : selectedRole === 'store_owner' ? 2 : 3,
+          name: selectedRole === 'admin' ? 'System Admin' : selectedRole === 'store_owner' ? 'Elena Rostova' : 'Alex Morgan',
           email: formData.email,
-          role: 'user'
+          role: selectedRole
         };
-        setUserProfile(mockUser);
         if (onLoginSuccess) onLoginSuccess(mockUser);
       } else {
         setErrorMsg(err.message);
@@ -78,14 +105,20 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
     }
   };
 
+  const roleConfigs = {
+    user: { title: 'Normal User', icon: User, badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+    store_owner: { title: 'Store Owner', icon: Store, badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
+    admin: { title: 'Administrator', icon: Shield, badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' },
+  };
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl max-w-md w-full overflow-hidden relative"
+          className="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl max-w-md w-full overflow-hidden relative my-8"
         >
           {/* Header */}
           <div className="p-6 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border-b border-slate-800 flex items-center justify-between">
@@ -95,10 +128,10 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
               </div>
               <div>
                 <h3 className="text-lg font-extrabold text-white tracking-tight">
-                  Welcome Back
+                  Single Multi-Role Sign In
                 </h3>
                 <p className="text-xs text-slate-400 font-mono">
-                  Sign in to your RateHub profile
+                  Admin • Store Owner • Normal User
                 </p>
               </div>
             </div>
@@ -111,112 +144,163 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
             </button>
           </div>
 
-          {/* Form */}
-          <div className="p-6 sm:p-8">
-            {userProfile ? (
-              <div className="text-center py-4 space-y-3">
-                <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-7 h-7" />
-                </div>
-                <h4 className="text-lg font-bold text-white">Login Successful!</h4>
-                <p className="text-xs text-slate-300">
-                  Welcome back, <span className="text-indigo-400 font-bold">{userProfile.name}</span>!
-                </p>
-                <button
-                  onClick={onClose}
-                  className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-mono font-bold transition-colors mt-2"
-                >
-                  Close Window
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                
-                {errorMsg && (
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-mono flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{errorMsg}</span>
-                  </div>
-                )}
-
-                <div>
-                  <label className="text-xs font-mono font-semibold text-slate-300 block mb-1.5">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      name="email"
-                      required
-                      placeholder="user@domain.com"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-950 text-xs sm:text-sm text-white placeholder-slate-500 rounded-xl border border-slate-800 focus:border-indigo-500 focus:outline-none transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-mono font-semibold text-slate-300 block mb-1.5">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      required
-                      placeholder="Enter your password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-10 py-2.5 bg-slate-950 text-xs sm:text-sm text-white placeholder-slate-500 rounded-xl border border-slate-800 focus:border-indigo-500 focus:outline-none transition-colors"
-                    />
+          {/* Body Form */}
+          <div className="p-6 sm:p-8 space-y-5">
+            
+            {/* Role Switcher Tabs */}
+            <div>
+              <label className="text-xs font-mono font-semibold text-slate-300 block mb-2">
+                Select Your Login Account Role:
+              </label>
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono">
+                {[
+                  { id: 'user', label: 'User', icon: User },
+                  { id: 'store_owner', label: 'Owner', icon: Store },
+                  { id: 'admin', label: 'Admin', icon: Shield },
+                ].map((tab) => {
+                  const isActive = selectedRole === tab.id;
+                  return (
                     <button
+                      key={tab.id}
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1"
+                      onClick={() => handleRoleSelect(tab.id)}
+                      className={`py-2 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                        isActive
+                          ? 'bg-indigo-600 text-white font-bold shadow-md'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      }`}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4 text-indigo-400" /> : <Eye className="w-4 h-4" />}
+                      <tab.icon className="w-3.5 h-3.5" />
+                      <span>{tab.label}</span>
                     </button>
-                  </div>
-                </div>
+                  );
+                })}
+              </div>
+            </div>
 
-                <div className="pt-2">
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              
+              {errorMsg && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-mono flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
+              {/* Email */}
+              <div>
+                <label className="text-xs font-mono font-semibold text-slate-300 block mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="user@domain.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950 text-xs sm:text-sm text-white placeholder-slate-500 rounded-xl border border-slate-800 focus:border-indigo-500 focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="text-xs font-mono font-semibold text-slate-300 block mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    required
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-950 text-xs sm:text-sm text-white placeholder-slate-500 rounded-xl border border-slate-800 focus:border-indigo-500 focus:outline-none transition-colors"
+                  />
+                  
+                  {/* Eye Toggle */}
                   <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-mono font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1"
+                    aria-label="Toggle password visibility"
                   >
-                    {isSubmitting ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Verifying Credentials...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Sign In</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
+                    {showPassword ? <EyeOff className="w-4 h-4 text-indigo-400" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+              </div>
 
-                <div className="pt-3 text-center border-t border-slate-800">
-                  <p className="text-xs text-slate-400">
-                    Don't have an account?{' '}
-                    <button
-                      type="button"
-                      onClick={onSwitchToRegister}
-                      className="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2 ml-1"
-                    >
-                      Register New Account
-                    </button>
-                  </p>
+              {/* Demo Auto-Fill Shortcuts */}
+              <div className="pt-1">
+                <span className="text-[10px] font-mono text-slate-500 block mb-1">Quick Auto-fill Test Accounts:</span>
+                <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
+                  <button
+                    type="button"
+                    onClick={() => fillDemoCredentials('user')}
+                    className="px-2 py-1 bg-slate-950 hover:bg-slate-800 text-emerald-400 rounded border border-slate-800"
+                  >
+                    + Normal User
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fillDemoCredentials('store_owner')}
+                    className="px-2 py-1 bg-slate-950 hover:bg-slate-800 text-purple-400 rounded border border-slate-800"
+                  >
+                    + Store Owner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fillDemoCredentials('admin')}
+                    className="px-2 py-1 bg-slate-950 hover:bg-slate-800 text-indigo-400 rounded border border-slate-800"
+                  >
+                    + Admin
+                  </button>
                 </div>
+              </div>
 
-              </form>
-            )}
+              {/* Submit Button */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-mono font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Authenticating JWT...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Sign In as {roleConfigs[selectedRole].title}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Switch to Register */}
+              <div className="pt-3 text-center border-t border-slate-800">
+                <p className="text-xs text-slate-400">
+                  Need a Normal User account?{' '}
+                  <button
+                    type="button"
+                    onClick={onSwitchToRegister}
+                    className="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2 ml-1"
+                  >
+                    Register New Account
+                  </button>
+                </p>
+              </div>
+
+            </form>
+
           </div>
         </motion.div>
       </div>

@@ -17,15 +17,23 @@ import Footer from './components/Footer';
 import RegisterModal from './components/auth/RegisterModal';
 import LoginModal from './components/auth/LoginModal';
 
+// Role Dashboards
+import AdminDashboard from './components/dashboards/AdminDashboard';
+import UserDashboard from './components/dashboards/UserDashboard';
+import StoreOwnerDashboard from './components/dashboards/StoreOwnerDashboard';
+
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Auth Modals State
+  // Auth Modals & Session State
   const [registerOpen, setRegisterOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('ratehub_user');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   // Sync dark mode class on document element
   useEffect(() => {
@@ -51,6 +59,13 @@ export default function App() {
   const showToast = (message) => {
     setToastMessage(message);
     setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('ratehub_token');
+    localStorage.removeItem('ratehub_user');
+    setCurrentUser(null);
+    showToast('Logged out successfully.');
   };
 
   return (
@@ -84,6 +99,21 @@ export default function App() {
         onOpenRegister={() => setRegisterOpen(true)}
         onOpenLogin={() => setLoginOpen(true)}
       />
+
+      {/* RENDER ROLE DASHBOARD WHEN LOGGED IN */}
+      {currentUser && (
+        <div className="max-w-7xl mx-auto px-4 pt-6">
+          {currentUser.role === 'admin' && (
+            <AdminDashboard user={currentUser} onLogout={handleLogout} />
+          )}
+          {currentUser.role === 'store_owner' && (
+            <StoreOwnerDashboard user={currentUser} onLogout={handleLogout} />
+          )}
+          {currentUser.role === 'user' && (
+            <UserDashboard user={currentUser} onLogout={handleLogout} />
+          )}
+        </div>
+      )}
 
       {/* Hero Section */}
       <Hero
@@ -129,11 +159,12 @@ export default function App() {
         }}
         onRegisterSuccess={(user) => {
           setCurrentUser(user);
-          showToast(`Welcome ${user.name}! Your account has been registered.`);
+          setRegisterOpen(false);
+          showToast(`Welcome ${user.name}! Registered as Normal User.`);
         }}
       />
 
-      {/* Login Modal */}
+      {/* Multi-Role Single Login Modal (Admin, Store Owner, Normal User) */}
       <LoginModal
         isOpen={loginOpen}
         onClose={() => setLoginOpen(false)}
@@ -143,7 +174,8 @@ export default function App() {
         }}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
-          showToast(`Logged in as ${user.name}`);
+          setLoginOpen(false);
+          showToast(`Logged in as ${user.name} (${user.role.toUpperCase()})`);
         }}
       />
 
