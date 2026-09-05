@@ -50,26 +50,28 @@ export default function DeveloperFeatures() {
                 Ratings are calculated and cached at 300+ global edge locations using Upstash Redis & Cloudflare Workers. Your store pages load instantly without database overhead.
               </p>
 
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
-                <div className="flex items-center justify-between text-slate-400">
-                  <span>Edge Node</span>
-                  <span>Latency</span>
-                  <span>Status</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-200">
-                  <span className="text-indigo-400">iad1 (US-East)</span>
-                  <span>11ms</span>
-                  <span className="text-emerald-400">● 100% OK</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-200">
-                  <span className="text-indigo-400">fra1 (EU-Central)</span>
-                  <span>14ms</span>
-                  <span className="text-emerald-400">● 100% OK</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-200">
-                  <span className="text-indigo-400">hkg1 (Asia-East)</span>
-                  <span>16ms</span>
-                  <span className="text-emerald-400">● 100% OK</span>
+              <div className="overflow-x-auto no-scrollbar">
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs space-y-2 min-w-[260px]">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span>Edge Node</span>
+                    <span>Latency</span>
+                    <span>Status</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-200">
+                    <span className="text-indigo-400">iad1 (US-East)</span>
+                    <span>11ms</span>
+                    <span className="text-emerald-400">● 100% OK</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-200">
+                    <span className="text-indigo-400">fra1 (EU-Central)</span>
+                    <span>14ms</span>
+                    <span className="text-emerald-400">● 100% OK</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-200">
+                    <span className="text-indigo-400">hkg1 (Asia-East)</span>
+                    <span>16ms</span>
+                    <span className="text-emerald-400">● 100% OK</span>
+                  </div>
                 </div>
               </div>
             </div>

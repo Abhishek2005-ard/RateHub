@@ -78,7 +78,7 @@ export default function WidgetPlayground() {
                 <label className="text-slate-300 font-semibold block mb-2">
                   Widget Theme Mode:
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-2">
                   {[
                     { id: 'dark', label: 'Dark Slate' },
                     { id: 'light', label: 'Crisp Light' },
@@ -87,7 +87,7 @@ export default function WidgetPlayground() {
                     <button
                       key={t.id}
                       onClick={() => setTheme(t.id)}
-                      className={`py-2 px-2 rounded-lg border text-center transition-all ${
+                      className={`flex-1 min-w-[90px] py-2.5 px-2 rounded-lg border text-center transition-all min-h-[40px] ${
                         theme === t.id
                           ? 'bg-indigo-600 text-white border-indigo-500 font-bold'
                           : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
@@ -104,7 +104,7 @@ export default function WidgetPlayground() {
                 <label className="text-slate-300 font-semibold block mb-2">
                   Layout Variant:
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-2">
                   {[
                     { id: 'card', label: 'Detailed Card' },
                     { id: 'compact', label: 'Compact Pill' },
@@ -113,7 +113,7 @@ export default function WidgetPlayground() {
                     <button
                       key={l.id}
                       onClick={() => setLayout(l.id)}
-                      className={`py-2 px-2 rounded-lg border text-center transition-all ${
+                      className={`flex-1 min-w-[90px] py-2.5 px-2 rounded-lg border text-center transition-all min-h-[40px] ${
                         layout === l.id
                           ? 'bg-indigo-600 text-white border-indigo-500 font-bold'
                           : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
@@ -130,7 +130,7 @@ export default function WidgetPlayground() {
                 <label className="text-slate-300 font-semibold block mb-2">
                   Star Accent Color:
                 </label>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   {[
                     { color: '#FBBF24', name: 'Amber Gold' },
                     { color: '#6366F1', name: 'Indigo' },
@@ -140,11 +140,12 @@ export default function WidgetPlayground() {
                     <button
                       key={c.color}
                       onClick={() => setAccentColor(c.color)}
-                      className={`w-7 h-7 rounded-full transition-transform flex items-center justify-center ${
-                        accentColor === c.color ? 'scale-125 ring-2 ring-white' : 'opacity-80 hover:opacity-100'
+                      className={`w-10 h-10 rounded-full transition-transform flex items-center justify-center ${
+                        accentColor === c.color ? 'scale-110 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : 'opacity-80 hover:opacity-100 hover:scale-105'
                       }`}
                       style={{ backgroundColor: c.color }}
                       title={c.name}
+                      aria-label={`Set accent color to ${c.name}`}
                     />
                   ))}
                 </div>

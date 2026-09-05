@@ -96,3 +96,18 @@
 .gradient-cta-banner {
   background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
 }
+
+/* Hide scrollbars for clean touch scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Ensure smooth touch scrolling on mobile elements */
+.touch-scrolly {
+  -webkit-overflow-scrolling: touch;
+}
+

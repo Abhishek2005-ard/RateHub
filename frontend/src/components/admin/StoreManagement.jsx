@@ -315,71 +315,101 @@ export default function StoreManagement() {
             </button>
           </div>
         ) : (
-          /* RESPONSIVE TABLE */
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono text-slate-300">
-              <thead>
-                <tr className="bg-slate-950 border-b border-slate-800 text-slate-400 uppercase tracking-wider">
-                  <th className="py-3.5 px-4 font-bold">Store & Category</th>
-                  <th className="py-3.5 px-4 font-bold">Assigned Owner</th>
-                  <th className="py-3.5 px-4 font-bold">Physical Address</th>
-                  <th className="py-3.5 px-4 font-bold text-center">Overall Rating</th>
-                  <th className="py-3.5 px-4 font-bold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {stores.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-800/40 transition-colors group">
-                    
-                    {/* Name & Category */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 flex items-center justify-center font-bold">
-                          <Building className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-white text-xs group-hover:text-purple-300 transition-colors">{s.name}</p>
-                          <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-950 text-indigo-300 border border-slate-800">
-                            {s.category}
-                          </span>
-                        </div>
+          <>
+            {/* MOBILE CARD VIEW (hidden on sm+) */}
+            <div className="sm:hidden divide-y divide-slate-800/60">
+              {stores.map((s) => (
+                <div key={s.id} className="p-4 flex items-center justify-between gap-3 hover:bg-slate-800/30 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 shrink-0 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 flex items-center justify-center">
+                      <Building className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-white truncate">{s.name}</p>
+                      <p className="text-[10px] text-slate-400 truncate font-mono">{s.category}</p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        <span className="text-[10px] text-amber-300 font-mono font-bold">{s.rating_avg || '5.0'}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">({s.rating_count || 12})</span>
                       </div>
-                    </td>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleViewStore(s.id)}
+                    className="shrink-0 px-3 py-2 rounded-xl bg-slate-950 hover:bg-purple-600 text-purple-300 hover:text-white border border-slate-800 hover:border-purple-500 text-[11px] font-mono font-semibold transition-all inline-flex items-center gap-1.5 min-h-[36px]"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
 
-                    {/* Owner Name & Email */}
-                    <td className="py-3.5 px-4">
-                      <p className="font-bold text-slate-200">{s.owner_name || 'Store Owner'}</p>
-                      <p className="text-[10px] text-slate-400">{s.email}</p>
-                    </td>
-
-                    {/* Address */}
-                    <td className="py-3.5 px-4 text-slate-300 truncate max-w-xs">{s.address}</td>
-
-                    {/* Overall Rating Calculation */}
-                    <td className="py-3.5 px-4 text-center">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span>{s.rating_avg ? s.rating_avg : '5.0'}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">({s.rating_count || 12})</span>
-                      </div>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => handleViewStore(s.id)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-purple-600 text-purple-300 hover:text-white border border-slate-800 hover:border-purple-500 text-[11px] font-mono font-semibold transition-all inline-flex items-center gap-1.5 shadow-sm"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Details</span>
-                      </button>
-                    </td>
-
+            {/* DESKTOP TABLE VIEW (hidden below sm) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono text-slate-300">
+                <thead>
+                  <tr className="bg-slate-950 border-b border-slate-800 text-slate-400 uppercase tracking-wider">
+                    <th className="py-3.5 px-4 font-bold">Store & Category</th>
+                    <th className="py-3.5 px-4 font-bold">Assigned Owner</th>
+                    <th className="py-3.5 px-4 font-bold">Physical Address</th>
+                    <th className="py-3.5 px-4 font-bold text-center">Overall Rating</th>
+                    <th className="py-3.5 px-4 font-bold text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {stores.map((s) => (
+                    <tr key={s.id} className="hover:bg-slate-800/40 transition-colors group">
+                      
+                      {/* Name & Category */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 flex items-center justify-center font-bold">
+                            <Building className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-white text-xs group-hover:text-purple-300 transition-colors">{s.name}</p>
+                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-950 text-indigo-300 border border-slate-800">
+                              {s.category}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Owner Name & Email */}
+                      <td className="py-3.5 px-4">
+                        <p className="font-bold text-slate-200">{s.owner_name || 'Store Owner'}</p>
+                        <p className="text-[10px] text-slate-400">{s.email}</p>
+                      </td>
+
+                      {/* Address */}
+                      <td className="py-3.5 px-4 text-slate-300 truncate max-w-xs">{s.address}</td>
+
+                      {/* Overall Rating Calculation */}
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold">
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          <span>{s.rating_avg ? s.rating_avg : '5.0'}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">({s.rating_count || 12})</span>
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          onClick={() => handleViewStore(s.id)}
+                          className="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-purple-600 text-purple-300 hover:text-white border border-slate-800 hover:border-purple-500 text-[11px] font-mono font-semibold transition-all inline-flex items-center gap-1.5 shadow-sm"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Details</span>
+                        </button>
+                      </td>
+
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         {/* PAGINATION FOOTER BAR */}

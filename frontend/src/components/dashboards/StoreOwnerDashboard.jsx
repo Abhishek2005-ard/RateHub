@@ -161,7 +161,7 @@ export default function StoreOwnerDashboard({ user, onLogout }) {
   ];
 
   return (
-    <div className="min-h-[650px] bg-slate-950 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden my-8 max-w-7xl mx-auto flex flex-col md:flex-row">
+    <div className="min-h-[650px] bg-slate-950 md:rounded-3xl border border-slate-800 shadow-2xl overflow-hidden md:my-8 max-w-7xl mx-auto flex flex-col md:flex-row">
       
       {/* Sidebar Navigation */}
       <aside className={`md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0 ${sidebarOpen ? 'block' : 'hidden md:flex'}`}>

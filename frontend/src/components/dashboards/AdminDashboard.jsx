@@ -225,7 +225,7 @@ export default function AdminDashboard({ user, onLogout }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col md:flex-row my-4 rounded-3xl border border-indigo-500/30 overflow-hidden shadow-2xl">
+    <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col md:flex-row md:my-4 md:rounded-3xl border border-indigo-500/30 overflow-hidden shadow-2xl">
       
       {/* MOBILE HEADER BAR */}
       <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between">
@@ -562,45 +562,47 @@ export default function AdminDashboard({ user, onLogout }) {
                     </div>
                   </div>
 
-                  {/* SVG Animated Responsive Bar Chart */}
-                  <div className="h-56 w-full pt-4 flex items-end justify-between gap-2 sm:gap-4 px-2">
-                    {stats.monthlyTrends.map((t, idx) => {
-                      const maxRating = Math.max(...stats.monthlyTrends.map(m => m.ratings));
-                      const ratingHeight = Math.round((t.ratings / maxRating) * 100);
-                      const userHeight = Math.round((t.users / maxRating) * 100);
+                  {/* SVG Animated Responsive Bar Chart - scrollable on mobile */}
+                  <div className="overflow-x-auto no-scrollbar -mx-2">
+                    <div className="h-56 pt-4 flex items-end justify-between gap-2 sm:gap-4 px-2 min-w-[380px]">
+                      {stats.monthlyTrends.map((t, idx) => {
+                        const maxRating = Math.max(...stats.monthlyTrends.map(m => m.ratings));
+                        const ratingHeight = Math.round((t.ratings / maxRating) * 100);
+                        const userHeight = Math.round((t.users / maxRating) * 100);
 
-                      return (
-                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
-                          {/* Tooltip Hover */}
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 z-20 bg-slate-950 border border-slate-700 text-white text-[10px] font-mono p-2 rounded-xl shadow-2xl pointer-events-none whitespace-nowrap">
-                            <p className="font-bold text-indigo-300">{t.month}:</p>
-                            <p>Ratings: {t.ratings}</p>
-                            <p>Signups: {t.users}</p>
+                        return (
+                          <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
+                            {/* Tooltip Hover */}
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 z-20 bg-slate-950 border border-slate-700 text-white text-[10px] font-mono p-2 rounded-xl shadow-2xl pointer-events-none whitespace-nowrap">
+                              <p className="font-bold text-indigo-300">{t.month}:</p>
+                              <p>Ratings: {t.ratings}</p>
+                              <p>Signups: {t.users}</p>
+                            </div>
+
+                            <div className="w-full flex items-end justify-center gap-1 h-44">
+                              {/* Ratings Bar */}
+                              <motion.div
+                                initial={{ height: 0 }}
+                                animate={{ height: `${ratingHeight}%` }}
+                                transition={{ duration: 0.8, delay: idx * 0.05 }}
+                                className="w-2.5 sm:w-4 bg-gradient-to-t from-indigo-700 to-indigo-400 rounded-t-lg group-hover:brightness-125 transition-all"
+                              />
+                              {/* Users Bar */}
+                              <motion.div
+                                initial={{ height: 0 }}
+                                animate={{ height: `${userHeight}%` }}
+                                transition={{ duration: 0.8, delay: idx * 0.05 + 0.1 }}
+                                className="w-2.5 sm:w-4 bg-gradient-to-t from-purple-700 to-purple-400 rounded-t-lg group-hover:brightness-125 transition-all"
+                              />
+                            </div>
+
+                            <span className="text-[10px] font-mono text-slate-400 group-hover:text-white font-semibold">
+                              {t.month}
+                            </span>
                           </div>
-
-                          <div className="w-full flex items-end justify-center gap-1 h-44">
-                            {/* Ratings Bar */}
-                            <motion.div
-                              initial={{ height: 0 }}
-                              animate={{ height: `${ratingHeight}%` }}
-                              transition={{ duration: 0.8, delay: idx * 0.05 }}
-                              className="w-2.5 sm:w-4 bg-gradient-to-t from-indigo-700 to-indigo-400 rounded-t-lg group-hover:brightness-125 transition-all"
-                            />
-                            {/* Users Bar */}
-                            <motion.div
-                              initial={{ height: 0 }}
-                              animate={{ height: `${userHeight}%` }}
-                              transition={{ duration: 0.8, delay: idx * 0.05 + 0.1 }}
-                              className="w-2.5 sm:w-4 bg-gradient-to-t from-purple-700 to-purple-400 rounded-t-lg group-hover:brightness-125 transition-all"
-                            />
-                          </div>
-
-                          <span className="text-[10px] font-mono text-slate-400 group-hover:text-white font-semibold">
-                            {t.month}
-                          </span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>

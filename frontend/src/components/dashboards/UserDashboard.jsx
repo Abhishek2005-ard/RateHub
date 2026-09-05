@@ -4,7 +4,7 @@ import UserStoreExplorer from '../UserStoreExplorer';
 
 export default function UserDashboard({ user, onLogout }) {
   return (
-    <div className="bg-slate-900 rounded-3xl border border-emerald-500/40 p-6 sm:p-8 shadow-2xl relative overflow-hidden my-8 max-w-6xl mx-auto space-y-8">
+    <div className="bg-slate-900 md:rounded-3xl border border-emerald-500/40 p-4 sm:p-6 sm:p-8 shadow-2xl relative overflow-hidden md:my-8 max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
         <div className="flex items-center gap-3">

@@ -107,7 +107,7 @@ export default function ApiSnippetSection() {
           <div className="p-4 bg-slate-950 border-b border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
             
             {/* Endpoint Switcher Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto">
               {[
                 { id: 'create_rating', label: 'POST Rating' },
                 { id: 'get_analytics', label: 'GET Analytics' },
@@ -119,7 +119,7 @@ export default function ApiSnippetSection() {
                     setSelectedEndpoint(ep.id);
                     setExecutionResult(null);
                   }}
-                  className={`px-3 py-1.5 text-xs font-mono rounded-lg transition-all ${
+                  className={`px-3.5 py-2 text-xs font-mono rounded-lg transition-all whitespace-nowrap min-h-[36px] ${
                     selectedEndpoint === ep.id
                       ? 'bg-indigo-600 text-white font-semibold shadow-xs'
                       : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'
@@ -149,16 +149,16 @@ export default function ApiSnippetSection() {
           </div>
 
           {/* Endpoint Banner info */}
-          <div className="px-5 py-3 bg-slate-950/60 border-b border-slate-800 flex items-center gap-3 text-xs font-mono">
-            <span className={`px-2 py-0.5 rounded font-bold ${
+          <div className="px-5 py-3 bg-slate-950/60 border-b border-slate-800 flex items-center gap-3 text-xs font-mono overflow-hidden">
+            <span className={`shrink-0 px-2 py-0.5 rounded font-bold ${
               endpoints[selectedEndpoint].method === 'POST' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-emerald-500/20 text-emerald-400'
             }`}>
               {endpoints[selectedEndpoint].method}
             </span>
-            <span className="text-white font-semibold">
+            <span className="text-white font-semibold truncate">
               https://api.ratehub.dev{endpoints[selectedEndpoint].url}
             </span>
-            <span className="text-slate-500 hidden md:inline">
+            <span className="text-slate-500 hidden md:inline shrink-0">
               — {endpoints[selectedEndpoint].description}
             </span>
           </div>

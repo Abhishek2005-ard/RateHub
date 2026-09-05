@@ -180,12 +180,12 @@ export default function StoreExplorer({ onRateStore }) {
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto py-1">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all whitespace-nowrap ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-mono transition-all whitespace-nowrap min-h-[36px] ${
                   selectedCategory === cat
                     ? 'bg-indigo-600 text-white font-bold shadow-md'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -268,9 +268,9 @@ export default function StoreExplorer({ onRateStore }) {
                   </div>
 
                   {/* Interactive Star Rating */}
-                  <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
-                    <span className="text-[11px] font-mono text-slate-400">Your Rating:</span>
-                    <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2 bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
+                    <span className="text-[11px] font-mono text-slate-400 shrink-0">Your Rating:</span>
+                    <div className="flex items-center gap-0.5">
                       {[1, 2, 3, 4, 5].map((star) => {
                         const activeStars = currentHover || userRating;
                         return (
@@ -279,7 +279,8 @@ export default function StoreExplorer({ onRateStore }) {
                             onClick={() => handleRate(store.id, star)}
                             onMouseEnter={() => setHoverRatings(prev => ({ ...prev, [store.id]: star }))}
                             onMouseLeave={() => setHoverRatings(prev => ({ ...prev, [store.id]: 0 }))}
-                            className="p-0.5 transition-transform hover:scale-125 focus:outline-none"
+                            className="p-1.5 transition-transform hover:scale-125 focus:outline-none min-h-[36px] min-w-[36px] flex items-center justify-center"
+                            aria-label={`Rate ${star} star`}
                           >
                             <Star
                               className={`w-4 h-4 ${
@@ -302,35 +303,36 @@ export default function StoreExplorer({ onRateStore }) {
         {/* JSON Preview Modal */}
         <AnimatePresence>
           {activeJsonModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md">
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl max-w-xl w-full overflow-hidden"
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-slate-900 rounded-t-3xl sm:rounded-3xl border border-slate-800 shadow-2xl max-w-xl w-full overflow-hidden max-h-[85vh] flex flex-col"
               >
-                <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-mono text-indigo-300">
-                    <Code className="w-4 h-4 text-indigo-400" />
-                    <span>REST API Output: {activeJsonModal.name}</span>
+                <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-2 text-xs font-mono text-indigo-300 overflow-hidden">
+                    <Code className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <span className="truncate">REST API Output: {activeJsonModal.name}</span>
                   </div>
                   <button
                     onClick={() => setActiveJsonModal(null)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                    className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 shrink-0 min-h-[36px] min-w-[36px] flex items-center justify-center"
+                    aria-label="Close modal"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="p-4 bg-slate-950 font-mono text-xs text-slate-300 relative max-h-96 overflow-y-auto">
+                <div className="p-4 bg-slate-950 font-mono text-xs text-slate-300 overflow-y-auto flex-1 relative">
                   <button
                     onClick={handleCopyJson}
-                    className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-mono flex items-center gap-1 border border-slate-700"
+                    className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-mono flex items-center gap-1 border border-slate-700 z-10"
                   >
                     {copiedModalJson ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                    <span>{copiedModalJson ? 'Copied' : 'Copy JSON'}</span>
+                    <span>{copiedModalJson ? 'Copied' : 'Copy'}</span>
                   </button>
-                  <pre>
+                  <pre className="whitespace-pre overflow-x-auto no-scrollbar pt-8">
                     <code>{JSON.stringify(activeJsonModal.apiPayload, null, 2)}</code>
                   </pre>
                 </div>
